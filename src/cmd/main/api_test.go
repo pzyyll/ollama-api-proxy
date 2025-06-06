@@ -6,9 +6,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"ollma-api-proxy/src/internal/core"
+	"ollama-api-proxy/src/internal/core"
 	"os"
 	"testing"
+
+	"maps"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -51,9 +53,7 @@ func makeJSONRequest(method, path string, body any, header map[string]string) *h
 		"Content-Type": "application/json",
 	}
 	if header != nil {
-		for key, value := range header {
-			headers[key] = value
-		}
+		maps.Copy(headers, header)
 	}
 
 	return makeRequest(method, path, payload, headers)

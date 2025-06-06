@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"ollma-api-proxy/src/internal/constants"
+	"ollama-api-proxy/src/internal/constants"
 
 	"github.com/gin-gonic/gin"
 )

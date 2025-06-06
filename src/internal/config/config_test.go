@@ -14,6 +14,7 @@ func TestLoadConfig(t *testing.T) {
 	os.Setenv("PROXY_OPENAI_BASE_URL", "https://api.example.com/v1")
 	os.Setenv("PROXY_OPENAI_API_KEY", "test-api-key")
 	os.Setenv("PROXY_TRUST_DOMAINS", "example.com,localhost")
+	os.Setenv("PROXY_TIMEOUT", "30s")
 
 	config, err := LoadConfig()
 	assert.NoError(t, err)
@@ -25,4 +26,5 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, "info", config.LogLevel)
 	assert.Contains(t, config.TrustDomains[0], "example.com")
 	assert.Contains(t, config.TrustDomains[1], "localhost")
+	assert.Equal(t, 30, int(config.Timeout.Seconds()), "Timeout should be 30 seconds")
 }

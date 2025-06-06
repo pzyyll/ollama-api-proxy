@@ -1,4 +1,4 @@
-module ollma-api-proxy
+module ollama-api-proxy
 
 go 1.24.2
 

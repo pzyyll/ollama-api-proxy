@@ -3,10 +3,11 @@ package core
 import (
 	"fmt"
 	"log/slog"
+	"net/http"
 
-	"ollma-api-proxy/src/internal/config"
-	"ollma-api-proxy/src/internal/router"
-	"ollma-api-proxy/src/internal/state"
+	"ollama-api-proxy/src/internal/config"
+	"ollama-api-proxy/src/internal/router"
+	"ollama-api-proxy/src/internal/state"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,6 +24,9 @@ func InitRouterEngine(config *config.Config) *gin.Engine {
 	router.SetupRouter(&state.State{
 		Config: config,
 		Router: engine,
+		HttpClient: &http.Client{
+			Timeout: config.Timeout,
+		},
 	})
 
 	return engine
@@ -30,7 +34,9 @@ func InitRouterEngine(config *config.Config) *gin.Engine {
 
 func Run(engine *gin.Engine, config *config.Config) error {
 	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
-	slog.Info("Starting server", "address", addr)
+
+	slog.Info("Starting server", "address", config.Host, "port", config.Port)
+
 	if err := engine.Run(addr); err != nil {
 		slog.Error("Failed to start server", "error", err)
 		return fmt.Errorf("failed to start server: %w", err)

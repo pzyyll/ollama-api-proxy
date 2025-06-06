@@ -1,0 +1,95 @@
+name: Docker Publish
+
+# Controls when the workflow will run
+on:
+  push:
+    tags:
+      - "v*.*.*" # Push on version tags like v1.0.0
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+env:
+  # IMAGE_NAME will be in the format: ghcr.io/OWNER/REPO_NAME
+  # ${{ github.repository }} is in the format OWNER/REPO_NAME
+  # ${{ github.repository_owner }} is the OWNER
+  # So, we convert OWNER to lowercase for GHCR best practices.
+  # Note: GHCR generally expects the repository owner part of the image name to be lowercase.
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+
+jobs:
+  build-and-push-ghcr:
+    name: Build and Push Docker Image to GHCR
+    runs-on: ubuntu-latest
+
+    # Grant GITHUB_TOKEN permissions to write to GHCR
+    permissions:
+      contents: read # To checkout the repository
+      packages: write # Required to push to GitHub Packages (GHCR)
+      # id-token: write # Optional: For OIDC token if you need to authenticate to other cloud services
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (for multi-platform builds, optional but good practice)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        id: buildx # Give this step an ID
+        uses: docker/setup-buildx-action@v3
+        # with:
+        #   driver-opts: image=moby/buildkit:v0.10.6 # Pin buildkit version if needed
+
+      - name: Login to GitHub Container Registry
+        # This step is crucial for pushing to GHCR.
+        # It uses the GITHUB_TOKEN provided by GitHub Actions.
+        if: github.event_name != 'pull_request' && success() # Don't login on PRs, only on success
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }} # Your GitHub username or organization name
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }} # Use the IMAGE_NAME defined in env
+          # GitHub Packages (GHCR) uses the repository name as the image name by default.
+          # The tags are generated based on Git events.
+          tags: |
+            # When a push is made to the main branch, the `main-latest` tag is created.
+            type=raw,value=main-latest,enable=${{ github.ref_name == 'main' }}
+            # The `latest` tag will automatically track the most recent semver tag.
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # Git branch, sha, and pr tags
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+          # Consider adding labels for better image organization and discovery
+          # labels: |
+          #   org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          #   org.opencontainers.image.description=My awesome Nuxt app
+          #   org.opencontainers.image.licenses=MIT
+
+      - name: Build and push Docker image to GHCR
+        id: build-and-push
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Build context is the root of the repository
+          file: ./Dockerfile # Path to your Dockerfile
+          # Only push if the event is not a pull_request and on the main branch or a tag
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Enable Docker layer caching for faster builds using GitHub Actions cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64 # Optional: for multi-platform builds
+
+    outputs:
+      image_digest: ${{ steps.build-and-push.outputs.digest }}
+      image_tags: ${{ steps.meta.outputs.tags }}

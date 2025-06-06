@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/knadh/koanf/providers/env"
@@ -10,22 +11,26 @@ import (
 )
 
 type Config struct {
-	Port          int      `koanf:"port" validate:"min=1,max=65535"`
-	Host          string   `koanf:"host" validate:"hostname|ip"`
-	OpenAIBaseURL string   `koanf:"openai_base_url" validate:"url"`
-	OpenAIAPIKey  string   `koanf:"openai_api_key"`
-	LogLevel      string   `koanf:"log_level" validate:"oneof=debug info warn error"`
-	TrustDomains  []string `koanf:"trust_domains" validate:"dive,hostname|ip"`
+	Port          int           `koanf:"port" validate:"min=1,max=65535"`
+	Host          string        `koanf:"host" validate:"hostname|ip"`
+	GinMode       string        `koanf:"gin_mode" validate:"oneof=debug release test"`
+	OpenAIBaseURL string        `koanf:"openai_base_url" validate:"url"`
+	OpenAIAPIKey  string        `koanf:"openai_api_key"`
+	LogLevel      string        `koanf:"log_level" validate:"oneof=debug info warn error"`
+	TrustDomains  []string      `koanf:"trust_domains" validate:"dive,hostname|ip"`
+	Timeout       time.Duration `koanf:"timeout" validate:"gte=0"`
 }
 
 func Default() *Config {
 	return &Config{
 		Port:          11434,
-		Host:          "localhost",
+		Host:          "0.0.0.0",
+		GinMode:       "debug",
 		OpenAIBaseURL: "https://api.openai.com/v1",
 		OpenAIAPIKey:  "",
 		LogLevel:      "info",
 		TrustDomains:  []string{"localhost", "127.0.0.1", "::1"},
+		Timeout:       5 * time.Minute, // Default timeout of 5 minutes
 	}
 }
 

@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"os"
 
-	"ollma-api-proxy/src/internal/config"
-	"ollma-api-proxy/src/internal/core"
+	"ollama-api-proxy/src/internal/config"
+	"ollama-api-proxy/src/internal/core"
 
 	"github.com/joho/godotenv"
 )
