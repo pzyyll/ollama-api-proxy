@@ -449,3 +449,39 @@ type ListModelResponse struct {
 	Capabilities []model.Capability `json:"capabilities,omitempty"`
 	Details      ModelDetails       `json:"details,omitempty"`
 }
+
+type ShowRequest struct {
+	Model  string `json:"model"`
+	System string `json:"system"`
+
+	// Template is deprecated
+	Template string `json:"template"`
+	Verbose  bool   `json:"verbose"`
+
+	Options map[string]any `json:"options"`
+
+	// Deprecated: set the model name with Model instead
+	Name string `json:"name"`
+}
+
+type Tensor struct {
+	Name  string   `json:"name"`
+	Type  string   `json:"type"`
+	Shape []uint64 `json:"shape"`
+}
+
+// ShowResponse is the response returned from [Client.Show].
+type ShowResponse struct {
+	License       string             `json:"license,omitempty"`
+	Modelfile     string             `json:"modelfile,omitempty"`
+	Parameters    string             `json:"parameters,omitempty"`
+	Template      string             `json:"template,omitempty"`
+	System        string             `json:"system,omitempty"`
+	Details       ModelDetails       `json:"details,omitempty"`
+	Messages      []Message          `json:"messages,omitempty"`
+	ModelInfo     map[string]any     `json:"model_info,omitempty"`
+	ProjectorInfo map[string]any     `json:"projector_info,omitempty"`
+	Tensors       []Tensor           `json:"tensors,omitempty"`
+	Capabilities  []model.Capability `json:"capabilities,omitempty"`
+	ModifiedAt    time.Time          `json:"modified_at,omitempty"`
+}

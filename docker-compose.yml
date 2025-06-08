@@ -1,6 +1,6 @@
 services:
   api:
-    # image: <image_name>
+    # image: ghcr.io/pzyyll/ollama-api-proxy:main-latest
     build:
       context: .
       dockerfile: Dockerfile

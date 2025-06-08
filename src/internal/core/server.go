@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"log/slog"
-	"net/http"
 
 	"ollama-api-proxy/src/internal/config"
 	"ollama-api-proxy/src/internal/router"
@@ -12,22 +11,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitRouterEngine(config *config.Config) *gin.Engine {
+func InitRouterEngine(appState *state.State) *gin.Engine {
 	engine := gin.New()
 
-	engine.SetTrustedProxies(config.TrustDomains)
+	engine.SetTrustedProxies(appState.Config.TrustDomains)
 	engine.ForwardedByClientIP = true
 
 	engine.Use(gin.Logger())
 	engine.Use(gin.Recovery())
 
-	router.SetupRouter(&state.State{
-		Config: config,
-		Router: engine,
-		HttpClient: &http.Client{
-			Timeout: config.Timeout,
-		},
-	})
+	router.SetupRouter(engine, appState)
 
 	return engine
 }

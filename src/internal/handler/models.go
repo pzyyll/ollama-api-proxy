@@ -6,14 +6,21 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
+	"ollama-api-proxy/src/internal/config"
 	"ollama-api-proxy/src/internal/dto"
 	"ollama-api-proxy/src/internal/dto/ollama"
 	"ollama-api-proxy/src/internal/dto/openai"
 	"ollama-api-proxy/src/internal/state"
 
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	cacheModels *ollama.ListResponse
+	cacheMutex  sync.Mutex
 )
 
 func GetModels(state *state.State) gin.HandlerFunc {
@@ -65,6 +72,59 @@ func GetModels(state *state.State) gin.HandlerFunc {
 			}
 		}
 
+		func() {
+			cacheMutex.Lock()
+			defer cacheMutex.Unlock()
+			cacheModels = &response
+		}()
+
 		c.JSON(http.StatusOK, response)
+	}
+}
+
+func GetModel(state *state.State) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req ollama.ShowRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			slog.Error("Invalid request body", "error", err)
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "Invalid model name"})
+			return
+		}
+
+		if req.Model == "" {
+			slog.Warn("Model not found", "model", req.Model)
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "Model name is required"})
+			return
+		}
+
+		var modelInfo *config.ModelInfo
+		if state.Models != nil {
+			modelInfo, _ = state.Models.GetModel(req.Model)
+		}
+
+		if modelInfo == nil {
+			slog.Warn("Model not found, use default config", "model", req.Model)
+			modelInfo = config.DefaultModelInfo()
+		}
+
+		c.JSON(http.StatusOK, ollama.ShowResponse{
+			License:    "",
+			Modelfile:  "",
+			Parameters: "",
+			Template:   "",
+			System:     "",
+			Details:    ollama.ModelDetails{
+				Format: "gguf",
+			},
+			Messages:   []ollama.Message{},
+			ModelInfo: map[string]any{
+				"general.architecture": "llama",
+				"llama.context_length": modelInfo.GetContextLength(),
+			},
+			ProjectorInfo: nil,
+			Tensors:       []ollama.Tensor{},
+			Capabilities:  modelInfo.GetCapabilities(),
+			ModifiedAt:    time.Now(),
+		})
 	}
 }

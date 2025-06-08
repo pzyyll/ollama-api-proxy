@@ -1,0 +1,58 @@
+bases:
+  - name: "think-default"
+    config:
+      capabilities: # <--- Add capabilities here "completion|tools|vision|thinking"
+        - "completion"
+        - "tools"
+        - "thinking"
+        - "vision"
+        - "insert"
+
+  - name: "default"
+    config:
+      capabilities: # <--- Add capabilities here "completion|tools|vision|thinking"
+        - "completion"
+        - "tools"
+        - "vision"
+        - "insert"
+
+models:
+  - name: "gpt-4.1"
+    base: "default"
+
+  - name: "o3"
+    base: "think-default"
+  
+  - name: "o4-mini"
+    base: "think-default"
+
+  - name: "claude-sonnet-4"
+    base: "think-default"
+    config:
+      input_tokens: 136000
+      output_tokens: 64000
+  
+  - name: "claude-opus-4"
+    base: "think-default"
+    config:
+      input_tokens: 136000
+      output_tokens: 32000
+
+  - name: "claude-sonnet-4-thinking"
+    base: "think-default"
+    config:
+      input_tokens: 136000
+      output_tokens: 64000
+  
+  - name: "claude-opus-4-thinking"
+    base: "think-default"
+    config:
+      input_tokens: 136000
+      output_tokens: 32000
+
+  - name: "gemini-2.5-flash"
+    base: "default"
+    
+
+  - name: "gemini-2.5-pro"
+    base: "think-default"

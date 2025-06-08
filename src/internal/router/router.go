@@ -9,15 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(appState *state.State) error {
-	engine := appState.Router
-
+func SetupRouter(engine *gin.Engine, appState *state.State) error {
 	// Define routes here (e.g., engine.GET("/path", handlerFunc))
 
 	apiRouter := engine.Group("/api")
 	{
 		apiRouter.GET("/version", handler.GetVersion)
 		apiRouter.GET("/tags", handler.GetModels(appState))
+		apiRouter.POST("/show", handler.GetModel(appState))
 	}
 
 	// OpenAI API

@@ -12,4 +12,5 @@ type State struct {
 	Config     *config.Config
 	Router     *gin.Engine
 	HttpClient *http.Client
+	Models     *config.Models
 }

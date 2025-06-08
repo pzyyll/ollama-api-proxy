@@ -2,10 +2,12 @@ package main
 
 import (
 	"log/slog"
+	"net/http"
 	"os"
 
 	"ollama-api-proxy/src/internal/config"
 	"ollama-api-proxy/src/internal/core"
+	"ollama-api-proxy/src/internal/state"
 
 	"github.com/joho/godotenv"
 )
@@ -48,7 +50,17 @@ func initConfig() *config.Config {
 
 func main() {
 	// Run the application
-	config := initConfig()
-	engine := core.InitRouterEngine(config)
-	core.Run(engine, config)
+	cfg := initConfig()
+	models, _ := config.LoadModels("models.yml")
+
+	appState := &state.State{
+		Config: cfg,
+		Models: models,
+		HttpClient: &http.Client{
+			Timeout: cfg.Timeout,
+		},
+	}
+	
+	engine := core.InitRouterEngine(appState)
+	core.Run(engine, cfg)
 }

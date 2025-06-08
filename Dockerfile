@@ -42,6 +42,8 @@ COPY --from=builder /app/ollama-api-proxy .
 
 # Copy the .env.example file. The user can mount a .env file to override it.
 # COPY .env.example .env
+COPY models.yml ./models.yml
+
 ENV GIN_MODE=release
 
 # Expose the port the app runs on

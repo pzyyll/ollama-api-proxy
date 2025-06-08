@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"ollama-api-proxy/src/internal/types/model"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,4 +29,24 @@ func TestLoadConfig(t *testing.T) {
 	assert.Contains(t, config.TrustDomains[0], "example.com")
 	assert.Contains(t, config.TrustDomains[1], "localhost")
 	assert.Equal(t, 30, int(config.Timeout.Seconds()), "Timeout should be 30 seconds")
+}
+
+func TestModelsConfig(t *testing.T) {
+	models, err := LoadModels("config_test.yml")
+	assert.NotNil(t, models)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(models.mapModels), "There should be 2 models loaded")
+
+	model1, err := models.GetModel("gpt-4.1")
+	assert.NotNil(t, model1, "gpt-4.1 model should be loaded")
+	assert.Equal(t, "gpt-4.1", model1.Name, "Model name should be gpt-4.1")
+	assert.NotNil(t, model1.baseModel, "Base model should not be nil")
+
+	model2, err := models.GetModel("gpt-4.1-mini")
+	assert.NotNil(t, model2, "gpt-4.1-mini model should be loaded")
+	assert.Equal(t, "gpt-4.1-mini", model2.Name, "Model name should be gpt-4.1-mini")
+
+	capabilities := model2.GetCapabilities()
+	assert.NoError(t, err, "Should not error when getting capabilities")
+	assert.Equal(t, capabilities, []model.Capability{"completion", "tools"}, "Capabilities should match")
 }

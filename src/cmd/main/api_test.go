@@ -6,7 +6,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"ollama-api-proxy/src/internal/config"
 	"ollama-api-proxy/src/internal/core"
+	"ollama-api-proxy/src/internal/state"
 	"os"
 	"testing"
 
@@ -21,9 +23,16 @@ var testRouter *gin.Engine
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
 	// Init test configuration
-	config := initConfig()
+	envConfig := initConfig()
+	models, _ := config.LoadModels("models.yaml")
 
-	testRouter = core.InitRouterEngine(config)
+	appState := &state.State{
+		Config:     envConfig,
+		HttpClient: &http.Client{},
+		Models:     models,
+	}
+
+	testRouter = core.InitRouterEngine(appState)
 
 	// Run the tests
 	exitCode := m.Run()

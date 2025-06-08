@@ -1,0 +1,27 @@
+bases:
+  - name: "default"
+    config:
+      capabilities: # <--- Add capabilities here "completion|tools|vision|thinking"
+        - "completion"
+        - "tools"
+        - "thinking"
+        - "vision"
+      input_tokens: 8192
+      output_tokens: 8192
+      max_tokens: 8192
+
+models:
+  - name: "gpt-4.1"
+    base: "default"
+    config:
+      capabilities: # <--- Add capabilities here "completion|tools|vision|thinking"
+        - "completion"
+        - "tools"
+        - "vision"
+
+  - name: "gpt-4.1-mini"
+    base: "default"
+    config:
+      capabilities: # <--- Add capabilities here "completion|tools|vision|thinking"
+        - "completion"
+        - "tools"

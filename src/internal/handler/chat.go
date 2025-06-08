@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"ollama-api-proxy/src/internal/dto/newapi"
 	"ollama-api-proxy/src/internal/dto/openai"
 	"ollama-api-proxy/src/internal/state"
 
@@ -16,7 +17,7 @@ import (
 
 func ChatCompletion(appState *state.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req openai.ChatCompletionRequest
+		var req newapi.GeneralOpenAIRequest
 		if err := c.ShouldBindJSON(&req); errors.Is(err, io.EOF) {
 			c.AbortWithStatusJSON(http.StatusBadRequest, openai.NewError(http.StatusBadRequest, "Request body is empty"))
 			return
@@ -24,6 +25,18 @@ func ChatCompletion(appState *state.State) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusBadRequest, openai.NewError(http.StatusBadRequest, err.Error()))
 			return
 		}
+
+		if appState.Models != nil {
+			if m, err := appState.Models.GetModel(req.Model); err == nil {
+				req.MaxTokens = uint(m.OutputTokens)
+			} else {
+				req.MaxTokens = 0
+			}
+		} else {
+			req.MaxTokens = 0
+		}
+
+		// slog.Debug("ChatCompletion request received", "max_tokens", req.MaxTokens, "model", req.Model, "MaxCompletionTokens", req.MaxCompletionTokens)
 
 		baseUrl, err := url.Parse(appState.Config.OpenAIBaseURL)
 		if err != nil {
